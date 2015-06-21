@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2015 Dmitriy Tyurin
 
@@ -537,7 +538,7 @@ if __name__ == "__main__":
         else:
             args.output = open(args.output, 'wb')
         if args.i == True:
-            args.i = tempfile.TemporaryFile()
+            args.output = tempfile.TemporaryFile()
 
         convertCsv=ConvertCSV(args.file)
         convertCsv.convert(args.output, args.delimiter)
