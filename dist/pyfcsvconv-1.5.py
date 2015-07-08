@@ -4,7 +4,7 @@
 
 __author__ = 'Dmitriy Tyurin <fobia3d@gmail.com>'
 __license__ = "MIT"
-__version__ = '1.6'
+__version__ = '1.5'
 
 import chardet
 import codecs
@@ -68,8 +68,6 @@ def file_utf8_encode(filename, output = None):
         f = open(output, 'wb')
         f.write(text)
         f.close()
-    else:
-        return text
 # -----------------------------------------------
 
 
@@ -475,7 +473,7 @@ class ConvertCSV:
         self.filename = unicode_filename(filename)
         self.tp = get_type_sheet(filename)
 
-    def convert(self, output, delimiter=',', quoting=csv.QUOTE_MINIMAL):
+    def convert(self, output, delimiter=','):
         t = self.tp['type']
 
         if t == 'xlsx':
@@ -510,12 +508,11 @@ class ConvertCSV:
         else:
             raise ValueError("Не верный аргумент файла записи")
 
-        writer = self._get_writer(output, delimiter=delimiter, quoting=quoting)
+        writer = self._get_writer(output, delimiter=delimiter)
         writer.write_reader(reader)
 
-    def _get_writer(self, output, delimiter=',', quoting=csv.QUOTE_MINIMAL):
-        # return CSVUnicodeWriter(output, delimiter=delimiter, encoding='utf-8', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
-        return CSVUnicodeWriter(output, delimiter=delimiter, encoding='utf-8', quoting=quoting, lineterminator='\n')
+    def _get_writer(self, output, delimiter=','):
+        return CSVUnicodeWriter(output, delimiter=delimiter, encoding='utf-8', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
 # -----------------------------------------------
 
 
@@ -529,24 +526,12 @@ if __name__ == "__main__":
         sys.setdefaultencoding('utf-8')
 
         parser = argparse.ArgumentParser(description='конвертация таблиц')
-
-        group1 = parser.add_mutually_exclusive_group()
-        group1.add_argument('-i', action='store_true', help='редактирование файлов на месте (создает копию, если указано расширение)')
-        group1.add_argument('-o', '--output', dest='output', default=None, help="сохранить в файл")
-
-        group2 = parser.add_mutually_exclusive_group()
-        group2.add_argument('-e', '--encode',    dest="encode",    action='store_true')
-        group2.add_argument('-w', "--window",    dest="window",    action='store_true',  help="set delimiter ';'")
-        group2.add_argument("-d", "--delimiter", dest="delimiter", default=",", help="delimiter - columns delimiter in csv (default: ',')")
-
-        parser.add_argument('-q', '--quoting', dest="quoting", action='store_true', help="Instructs writer objects to quote all fields.")
-        # parser.add_argument('file',  help='входной файл таблицы', type=argparse.FileType('r')) #nargs='+',
-        parser.add_argument('file',  help='входной файл таблицы')
+        parser.add_argument('-i', action='store_true', help='редактирование файлов на месте (создает копию, если указано расширение)')
+        parser.add_argument('-o', '--output', dest='output', default=None, help="сохранить в файл")
+        parser.add_argument("-d", "--delimiter", dest="delimiter", default=",", help="delimiter - columns delimiter in csv (default: ',')")
+        parser.add_argument('file',  help='входной файл таблицы') #nargs='+',
 
         args = parser.parse_args()
-
-        if args.window:
-            args.delimiter = ';'
 
         if not args.output:
             args.output = sys.stdout
@@ -555,29 +540,48 @@ if __name__ == "__main__":
         if args.i == True:
             args.output = tempfile.TemporaryFile()
 
-        if not args.encode:
-            convertCsv=ConvertCSV(args.file)
-            convertCsv.convert(args.output, args.delimiter, args.quoting)
-            del convertCsv
-        else:
-            f = open(args.file, 'rb')
-            for line in f:
-                txt = utf8_encode(line)
-                args.output.write(txt)
-            f.close()
-            # file_utf8_encode(args.file, args.output)
-            # text = args.file.read()
-            # text = utf8_encode(text)
-            # args.output.write(text)
-            # del text
+        convertCsv=ConvertCSV(args.file)
+        convertCsv.convert(args.output, args.delimiter)
 
         if args.i == True:
             import shutil
+            del convertCsv
 
             args.output.seek(0)
             with open(args.file, 'wb') as fdest:
                 shutil.copyfileobj(args.output, fdest)
 
+        # params = {
+        #     'i': args.i,
+        #     'output': args.output, # None,
+        #     'delimiter': args.delimiter, #  ',',
+        #     'file': args.file # '../TableSheets/test/data/fake.xlsx'
+        # }
+        # params = {
+        #     'i': False,
+        #     'output': None,
+        #     'delimiter': ',',
+        #     'file': '../TableSheets/test/data/fake.xlsx'
+        # }
+        #
+        # if not params['output']:
+        #     params['output'] = sys.stdout
+        # else:
+        #     params['output'] = open(params['output'], 'w')
+        #
+        # if params['i'] == True:
+        #     params['output'] = tempfile.TemporaryFile()
+        #
+        # convertCsv = ConvertCSV(params['file'])
+        # convertCsv.convert(params['output'], params['delimiter'])
+        #
+        # if params['i'] == True:
+        #     import shutil
+        #     del convertCsv
+        #
+        #     params['output'].seek(0)
+        #     with open(params['file'], 'wb') as fdest:
+        #         shutil.copyfileobj(params['output'], fdest)
     except BaseException as e:
         print "Error parse: {0}".format(e)
         sys.exit(1)
