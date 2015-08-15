@@ -4,7 +4,7 @@
 
 __author__ = 'Dmitriy Tyurin <fobia3d@gmail.com>'
 __license__ = "MIT"
-__version__ = '1.6'
+__version__ = '1.6.1'
 
 import chardet
 import codecs
@@ -528,7 +528,7 @@ if __name__ == "__main__":
         reload(sys)
         sys.setdefaultencoding('utf-8')
 
-        parser = argparse.ArgumentParser(description='конвертация таблиц')
+        parser = argparse.ArgumentParser(description='конвертация таблиц v' + __version__)
 
         group1 = parser.add_mutually_exclusive_group()
         group1.add_argument('-i', action='store_true', help='редактирование файлов на месте (создает копию, если указано расширение)')
